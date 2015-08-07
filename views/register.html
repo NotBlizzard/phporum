@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+</head>
+<body>
+{% if error %}
+  <p>{{error}}</p>
+{% endif %}
+<form action="/register" method="POST">
+<label>UserName</label><br />
+<input name='username'><br />
+<label>Email</label><br />
+<input name='email'><br />
+<label>Password</label><br />
+<input type='password' name='password'>
+<input type='submit'>
+</body>
+</html>

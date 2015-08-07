@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+
+</head>
+<body>
+<center>
+<h1>{{data.title}}</h1>
+<div class='comment op'>
+  {{username}}
+  <img src="https://gravatar.com/avatar/{{email}}" />
+  <article style="border-bottom:1px solid #">{{data.content}}</article>
+</div>
+{% for comment in comments %}
+  <div class='comment'>
+    <article>{{comment.content}}</article>
+  </div>
+{% endfor %}
+
+<form action='/newcomment/{{data.id}}' method="POST">
+<textarea name='content'></textarea>
+<input type="submit">
+</form>
+</center>
+</body>
+</html>
