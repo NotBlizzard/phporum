@@ -6,24 +6,52 @@ use Symfony\Component\HttpFoundation\Request;
 session_start();
 
 $app = new Silex\Application();
+
+$app['debug'] = true;
 try {
   $db = new PDO("pgsql:dbname=phporum;host=localhost;", "postgres", "anthony");
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
   echo $e->getMessage();
 }
-$app['debug'] = true;
+
 $app->register(new Silex\Provider\TwigServiceProvider(), [
   'twig.path' => __DIR__ . '/views',
 ]);
 
 $app->get('/', function() use ($app) {
-  return $app['twig']->render('home.html', ['username' => $_SESSION['username']] );
+  if (isset($_SESSION['username'])) {
+    return $app['twig']->render('home.html', ['username' => $_SESSION['username']] );
+  } else {
+    return $app['twig']->render('home.html');
+  }
 });
 
 $app->get('/logout', function() use ($app) {
   unset($_SESSION['username']);
   return $app->redirect('/');
+});
+
+$app->get('/login', function() use ($app) {
+  if (isset($_SESSION['username'])) {
+    $app->redirect('/');
+  }
+  return $app['twig']->render('login.html');
+});
+
+$app->post('/login', function (Request $request) use ($app, $db) {
+  $email = $request->get('email');
+  $password = $request->get('password');
+  $st = $db->prepare("SELECT password_hash FROM users WHERE email = :email");
+  $st->execute([":email" => $email]);
+  if (password_verify($password, $st->fetch()[0])) {
+    $st = $db->prepare("SELECT username FROM users WHERE email = :email");
+    $st->execute([":email" => $email]);
+    $_SESSION['username'] = $st->fetch()[0];
+    return $app->redirect("/");
+  } else {
+    return $app->redirect("/login");
+  }
 });
 
 $app->get('/new', function() use ($app) {
@@ -88,17 +116,28 @@ $app->post('/new', function(Request $request) use ($app, $db) {
   }
 });
 
-$app->get("/{id}", function($id) use ($app, $db) {
+$app->get('/posts', function() use ($app, $db) {
+  $st = $db->prepare("SELECT * FROM posts");
+  $st->execute();
+  $data = $st->fetchAll();
+  return $app['twig']->render('index.html', ['data' => array_reverse($data)]);
+});
+
+$app->get("/posts/{id}", function($id) use ($app, $db) {
   $st = $db->prepare("SELECT * FROM posts WHERE id = :id");
   $st->execute([":id" => intval($id)]);
   $data = $st->fetch();
-  $_st = $db->prepare("SELECT username, email FROM users WHERE id=:id");
-  $_st->execute([":id" => $data['user_id']]);
-  $username = $_st->fetch()['username'];
-  $email = $_st->fetch();
-  $st_ = $db->prepare("SELECT * FROM comments WHERE post_id = :post_id");
-  $st_->execute([":post_id" => intval($id)]);
-  $comments = $st_->fetchAll();
+
+  $st = $db->prepare("SELECT username, email FROM users WHERE id=:id");
+  $st->execute([":id" => $data['user_id']]);
+  $temp_data = $st->fetch();
+  $username = $temp_data['username'];
+  $email = $temp_data['email'];
+
+  $st = $db->prepare("SELECT * FROM comments WHERE post_id = :post_id");
+  $st->execute([":post_id" => intval($id)]);
+  $comments = $st->fetchAll();
+
   return $app['twig']->render('show.html', [
     'data' => $data,
     'username' => $username,
@@ -114,13 +153,15 @@ $app->post("/newcomment/{id}", function($id, Request $request) use ($app, $db) {
   $st = $db->prepare("SELECT id FROM posts WHERE id = :id");
   $st->execute([":id" => intval($id)]);
   $id = $st->fetch()[0];
-  $_st = $db->prepare("SELECT id,email FROM users WHERE username=:username");
+  $_st = $db->prepare("SELECT id,email,username FROM users WHERE username=:username");
   $_st->execute([":username" => $_SESSION['username']]);
-  $user_id = $_st->fetch()[0];
-  $email = $st->fetch()[1];
-  $st = $db->prepare("INSERT INTO comments (content, user_id, post_id, user_email) VALUES (:content, :user_id, :post_id, :user_email)");
-  $st->execute([":content" => $request->get('content'), ":post_id" => $id, ":user_id" => $user_id, ":user_email" => $email ]);
-  echo $email;
+  $data = $_st->fetch();
+  $user_id = $data[0];
+  $email = $data[1];
+  $username = $data[2];
+  $st = $db->prepare("INSERT INTO comments (content, user_id, post_id, user_email, user_email_hash, user_name) VALUES (:content, :user_id, :post_id, :user_email, :user_email_hash, :user_name)");
+  $st->execute([":content" => $request->get('content'), ":post_id" => $id, ":user_id" => $user_id, ":user_email" => $email, ":user_email_hash" => md5($email), ':user_name' =>  $username]);
+  return $app->redirect("/$id");
 });
 
 $app->run();

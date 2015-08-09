@@ -3,13 +3,21 @@
 <head>
   <title>Phporum</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+      <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+
 
 </head>
 <body>
+<center>
 <h1>Phporum</h1>
 <p>A mini forum written in PHP.</p>
-{% if username %}
-  <p>Hi {{username}}</p>
+{% if username is defined %}
+  <a href="/new" class='button'>New Post</a>
+  <a href='/logout' class='button'>Logout</a>
+{% else %}
+  <a href="/register" class='button'>Register</a>
 {% endif %}
+
+</center>
 </body>
 </html>

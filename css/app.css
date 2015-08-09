@@ -1,8 +1,51 @@
 .comment {
   border-bottom: 1px solid #3498db;
   width: 80%;
+  display: inline-block;
+  margin: 5px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
 }
 .op {
   border-bottom: 1px solid #2ecc71;
   width: 80%;
+}
+.avatar {
+  float: left;
+}
+a {
+  font-size: 24px;
+}
+.button, .button:visited, .button:hover {
+  padding: 4px;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background-color: #2ecc71;
+  color: #fff;
+}
+.username {
+  float: left;
+  font-weight: bold;
+}
+article {
+  float: left;
+  margin-left: 4px;
+}
+.comment-content {
+  height: 200px;
+  width: 400px;
+  border: 1px solid #2ecc71;
+}
+.post-content {
+  text-align: left;
+  vertical-align: top;
+  height: 400px;
+  width: 800px;
+  border: 1px solid #2ecc71;
+}
+.post-title {
+  border: 1px solid #2ecc71;
 }

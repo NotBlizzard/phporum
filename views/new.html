@@ -3,14 +3,19 @@
 <head>
   <title></title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+
 
 </head>
 <body>
+<center>
 <form action="/new" method="POST">
 <label>Title</label><br />
-<input name='title'><br />
+<input name='title' class='post-title'><br />
 <label>Content</label><br />
-<input name='content'><br />
-<input type='submit'>
+<textarea name='content' class='post-content'></textarea><br />
+<input type='submit' class='button'>
+</form>
+</center>
 </body>
 </html>

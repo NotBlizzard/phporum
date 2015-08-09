@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+</head>
+<body>
+<center>
+{% for post in data %}
+  <a class='link' href="/posts/{{post.id}}">{{post.title}}</a><br />
+{% endfor %}
+</center>
+</body>
+</html>
