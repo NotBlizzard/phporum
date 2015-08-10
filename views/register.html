@@ -3,19 +3,24 @@
 <head>
   <title></title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-
+          <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
 </head>
 <body>
+<center>
 {% if error %}
   <p>{{error}}</p>
 {% endif %}
 <form action="/register" method="POST">
 <label>UserName</label><br />
-<input name='username'><br />
+<input name='username' class='input'><br />
 <label>Email</label><br />
-<input name='email'><br />
+<input name='email' class='input'><br />
 <label>Password</label><br />
-<input type='password' name='password'>
-<input type='submit'>
+<input type='password' name='password' class='input'><br />
+<label>Confirm Password</label><br />
+<input type='password' name='password_confirm' class='input'><br />
+<input type='submit' class='button'>
+
+</center>
 </body>
 </html>

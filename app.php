@@ -9,7 +9,11 @@ $app = new Silex\Application();
 
 $app['debug'] = true;
 try {
-  $db = new PDO("pgsql:dbname=phporum;host=localhost;", "postgres", "anthony");
+  if (isset($_SERVER["DATABASE_NAME"])) {
+    $db = new PDO("pgsql:dbname=".$_SERVER['DATABASE_NAME'].";host=".$_SERVER['DATABASE_HOST']."", $_SERVER['DATABASE_USERNAME'], $_SERVER['DATABASE_PASSWORD']);
+    } else {
+    $db = new PDO("pgsql:dbname=phporum;host=localhost;", "postgres", $_SERVER["PSQL_DB_PASS"]);
+  }
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
   echo $e->getMessage();
@@ -73,6 +77,7 @@ $app->post('/register', function(Request $request) use ($app, $db) {
 
   $username = $request->get('username');
   $email = $request->get('email');
+  $pass_confirm = $request->get('password_confirm');
   $pass = $request->get('password');
   if (trim($email) === '' || trim($username) === '' || trim($pass) === '') {
     return $app['twig']->render('register.html', ['error' => 'username, email, and password cannot be empty.']);
@@ -80,15 +85,18 @@ $app->post('/register', function(Request $request) use ($app, $db) {
   if (strlen($pass) < 5) {
     return $app['twig']->render('register.html', ['error' => 'password must be more than 5 characters.']);
   }
+  if ($pass !== $pass_confirm) {
+    return $app['twig']->render('register.html', ['error' => 'passwords must match.']);
+  }
   $password = password_hash($pass, PASSWORD_DEFAULT);
   // We check if the username is taken.
-  $st = $db->prepare("SELECT * FROM users WHERE username = :username");
+  $st = $db->prepare("SELECT * FROM users WHERE username LIKE :username");
   $st->execute([":username" => $username]);
   if ($st) {
     return $app['twig']->render('register.html', ['error' => 'username already exists.']);
   }
   // We check if email is taken.
-  $st = $db->prepare("SELECT * FROM users WHERE email = :email");
+  $st = $db->prepare("SELECT * FROM users WHERE email LIKE :email");
   $st->execute([":username" => $email]);
   if ($st) {
     return $app['twig']->render('register.html', ['error' => 'email already exists.']);
@@ -110,7 +118,7 @@ $app->post('/new', function(Request $request) use ($app, $db) {
 
     $st->execute([':title' => $title, ':created_at' => date('Y-m-d H:i:s'), ':user_id' => $user_id, ':modified_at' => date('Y-m-d H:i:s'), ':content' => $content]);
     $id = $st->fetch()[0];
-    return $app->redirect("/".$id);
+    return $app->redirect("/posts/".$id);
   }else{
     return $app->redirect('/');
   }
@@ -161,7 +169,20 @@ $app->post("/newcomment/{id}", function($id, Request $request) use ($app, $db) {
   $username = $data[2];
   $st = $db->prepare("INSERT INTO comments (content, user_id, post_id, user_email, user_email_hash, user_name) VALUES (:content, :user_id, :post_id, :user_email, :user_email_hash, :user_name)");
   $st->execute([":content" => $request->get('content'), ":post_id" => $id, ":user_id" => $user_id, ":user_email" => $email, ":user_email_hash" => md5($email), ':user_name' =>  $username]);
-  return $app->redirect("/$id");
+  return $app->redirect("/posts/$id");
+});
+
+$app->get('/users/{user}', function($user, Request $requesat) use ($app, $db) {
+  $st = $db->prepare("SELECT id,username,email FROM users WHERE username = :username");
+  $st->execute([":username" => strtolower($user)]);
+  $data = $st->fetch();
+  $id = $data['id'];
+  $username = $data['username'];
+  $email = $data['email'];
+  $st = $db->prepare("SELECT * FROM posts WHERE user_id = :user_id");
+  $st->execute([":user_id" => $id]);
+  $posts = array_reverse($st->fetchAll());
+  return $app['twig']->render('user.html', ['posts' => $posts, 'email_hash' => md5($email), 'username' => $username]);
 });
 
 $app->run();

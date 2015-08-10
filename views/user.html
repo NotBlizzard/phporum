@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+</head>
+<body>
+<center>
+<br />
+<img src='http://www.gravatar.com/avatar/{{email_hash}}'><br />
+<h2>{{username}}</h2>
+{% for post in posts %}
+  <a href="/posts/{{post.id}}">{{post.title}}</a><br />
+{% endfor %}
+</center>
+</body>
+</html>

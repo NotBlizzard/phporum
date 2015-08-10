@@ -3,14 +3,20 @@
 <head>
   <title></title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+          <link rel='stylesheet' href="{{app.request.basepath}}/css/app.css">
+
 
 </head>
 <body>
+<center>
+<h2>Login</h2>
+
 <form action="/login" method="POST">
 <label>Email</label><br />
-<input name='email'><br />
+<input name='email' class='input'><br />
 <label>Password</label><br />
-<input name='password'><br />
-<input type='submit'>
+<input name='password' type='password' class='input'><br />
+<input type='submit' class='button'>
+</center>
 </body>
 </html>

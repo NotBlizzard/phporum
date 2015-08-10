@@ -11,14 +11,14 @@
 <h1>{{data.title}}</h1>
 <div class='comment op'>
   <img class='avatar' src="https://gravatar.com/avatar/{{email}}" />
-    <p class='username'>{{username}}</p><br />
+    <p class='username'><a href='users/{{username}}'>{{username}}</a></p><br />
 
   <article style="border-bottom:1px solid #">{{data.content}}</article>
 </div>
 {% for comment in comments %}
   <div class='comment'>
     <img class='avatar' src="https://gravatar.com/avatar/{{comment.user_email_hash}}" >
-    <p class='username'>{{comment.user_name}}</p><br />
+    <p class='username'><a href='users/{{comment.user_name}}'>{{comment.user_name}}</a></p><br />
     <article>{{comment.content}}</article>
   </div>
 {% endfor %}
