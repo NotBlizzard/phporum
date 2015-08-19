@@ -3,6 +3,7 @@
 require __DIR__ . '/vendor/autoload.php';
 
 use Symfony\Component\HttpFoundation\Request;
+
 session_start();
 
 $app = new Silex\Application();
@@ -10,9 +11,9 @@ $app = new Silex\Application();
 $app['debug'] = true;
 try {
   if (isset($_SERVER["DATABASE_NAME"])) {
-    $db = new PDO("pgsql:dbname=".$_SERVER['DATABASE_NAME'].";host=".$_SERVER['DATABASE_HOST']."", $_SERVER['DATABASE_USERNAME'], $_SERVER['DATABASE_PASSWORD']);
-    } else {
-    $db = new PDO("pgsql:dbname=phporum;host=localhost;", "postgres", $_SERVER["PSQL_DB_PASS"]);
+    $db = new PDO("pgsql:dbname=".getenv('DATABASE_NAME').";host=".getenv('DATABASE_HOST')."", getenv('DATABASE_USERNAME'), getenv('DATABASE_PASSWORD'));
+  } else {
+    $db = new PDO("pgsql:dbname=phporum;host=localhost;", "postgres", getenv('PSQL_DB_PASS'));
   }
   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
@@ -23,6 +24,10 @@ $app->register(new Silex\Provider\TwigServiceProvider(), [
   'twig.path' => __DIR__ . '/views',
 ]);
 
+/*
+ * When the user is at the main page.
+*/
+
 $app->get('/', function() use ($app) {
   if (isset($_SESSION['username'])) {
     return $app['twig']->render('home.html', ['username' => $_SESSION['username']] );
@@ -31,11 +36,9 @@ $app->get('/', function() use ($app) {
   }
 });
 
-$app->get('/logout', function() use ($app) {
-  unset($_SESSION['username']);
-  return $app->redirect('/');
-});
-
+/*
+ * When the user attempts to login.
+*/
 $app->get('/login', function() use ($app) {
   if (isset($_SESSION['username'])) {
     $app->redirect('/');
@@ -58,13 +61,9 @@ $app->post('/login', function (Request $request) use ($app, $db) {
   }
 });
 
-$app->get('/new', function() use ($app) {
-  if (isset($_SESSION['username'])) {
-    return $app['twig']->render('new.html');
-  } else {
-    return $app->redirect('/');
-  }
-});
+/*
+ * When the user attempts to register.
+*/
 
 $app->get('/register', function() use ($app) {
   if (isset($_SESSION['username'])) {
@@ -107,6 +106,27 @@ $app->post('/register', function(Request $request) use ($app, $db) {
   return $app->redirect("/");
 });
 
+/*
+ * When the user logs out.
+*/
+
+$app->get('/logout', function() use ($app) {
+  unset($_SESSION['username']);
+  return $app->redirect('/');
+});
+
+/*
+ * When the user makes a new post.
+*/
+
+$app->get('/new', function() use ($app) {
+  if (isset($_SESSION['username'])) {
+    return $app['twig']->render('new.html');
+  } else {
+    return $app->redirect('/');
+  }
+});
+
 $app->post('/new', function(Request $request) use ($app, $db) {
   if (isset($_SESSION['username'])) {
     $content = $request->get('content');
@@ -124,12 +144,19 @@ $app->post('/new', function(Request $request) use ($app, $db) {
   }
 });
 
+/*
+ * Index of every post.
+*/
 $app->get('/posts', function() use ($app, $db) {
   $st = $db->prepare("SELECT * FROM posts");
   $st->execute();
   $data = $st->fetchAll();
   return $app['twig']->render('index.html', ['data' => array_reverse($data)]);
 });
+
+/*
+ * Shows the specific post.
+*/
 
 $app->get("/posts/{id}", function($id) use ($app, $db) {
   $st = $db->prepare("SELECT * FROM posts WHERE id = :id");
@@ -154,6 +181,10 @@ $app->get("/posts/{id}", function($id) use ($app, $db) {
     ]);
 });
 
+/*
+ * When a user attempts to make a new comment on a post.
+*/
+
 $app->post("/newcomment/{id}", function($id, Request $request) use ($app, $db) {
   if (!isset($_SESSION['username'])) {
     return $app->redirect('/');
@@ -171,6 +202,10 @@ $app->post("/newcomment/{id}", function($id, Request $request) use ($app, $db) {
   $st->execute([":content" => $request->get('content'), ":post_id" => $id, ":user_id" => $user_id, ":user_email" => $email, ":user_email_hash" => md5($email), ':user_name' =>  $username]);
   return $app->redirect("/posts/$id");
 });
+
+/*
+ * Shows the specific user.
+*/
 
 $app->get('/users/{user}', function($user, Request $requesat) use ($app, $db) {
   $st = $db->prepare("SELECT id,username,email FROM users WHERE username = :username");
